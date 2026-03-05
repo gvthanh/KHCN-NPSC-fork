@@ -8,45 +8,40 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Hàm kiểm tra quyền truy cập theo công ty
-    function isSameCompany(resourceData) {
-      return request.auth.token.companyId == resourceData.companyId;
-    }
-
-    // 1. Quy tắc cho kho sáng kiến (Chính thức)
+    // 1. Kho sáng kiến (Chính thức)
     match /initiatives/{docId} {
-      allow read: if isAuthenticated() && isSameCompany(resource.data);
-      allow write: if isAuthenticated() && request.resource.data.companyId == request.auth.token.companyId;
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
     }
 
-    // 2. Quy tắc cho danh mục đề tài KHCN
+    // Sub-collection cho tài liệu tham khảo
+    match /initiatives/{parentId}/{subCol}/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // 2. Danh mục đề tài KHCN
     match /research_projects/{docId} {
-      allow read: if isAuthenticated() && isSameCompany(resource.data);
-      allow write: if isAuthenticated() && request.resource.data.companyId == request.auth.token.companyId;
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
     }
 
-    // 3. Quy tắc cho Cấu hình hệ thống
+    // 3. Cấu hình hệ thống
     match /settings/{docId} {
       allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && request.resource.data.companyId == request.auth.token.companyId;
+      allow write: if isAuthenticated();
     }
 
-    // 4. Quy tắc cho Sáng kiến chờ duyệt
+    // 4. Sáng kiến chờ duyệt (cho phép tạo không cần login)
     match /pending_initiatives/{docId} {
-      allow create: if request.resource.data.companyId != null;
-      allow read, update, delete: if isAuthenticated() && isSameCompany(resource.data);
+      allow create: if true;
+      allow read, update, delete: if isAuthenticated();
     }
 
-    // 5. Quy tắc cho Hồ sơ người dùng
+    // 5. Hồ sơ người dùng
     match /users/{userId} {
       allow read: if isAuthenticated();
       allow write: if isAuthenticated() && request.auth.uid == userId;
-    }
-
-    // 6. Quy tắc cho Cấu hình công ty (Master)
-    match /company_configs/{configId} {
-      allow read: if true; // Cho phép đọc để khởi tạo app (hoặc giới hạn if isAuthenticated())
-      allow write: if isAuthenticated(); // Nên giới hạn cho Master Admin trong thực tế
     }
   }
 }

@@ -1,6 +1,6 @@
 
 export type InitiativeLevel = 'HLH' | 'NPSC' | 'NPC' | 'EVN';
-export type InitiativeScope = 'Company' | 'NPC'; 
+export type InitiativeScope = 'Company' | 'NPC';
 
 export interface PointConfig {
   HLH: number;
@@ -11,8 +11,7 @@ export interface PointConfig {
 
 export interface Initiative {
   id: string;
-  companyId: string; // MỚI: Định danh công ty
-  scope?: InitiativeScope; 
+  scope?: InitiativeScope;
   phase: string;
   year: number;
   type: string;
@@ -21,36 +20,33 @@ export interface Initiative {
   authors: string[];
   unit: string[];
   result: string;
-  field: string[]; 
+  field: string[];
   reward: string;
   level: InitiativeLevel[];
   isScalable?: boolean;
-  attachmentName?: string;
-  attachmentUrl?: string; 
-  attachmentUrls?: string[]; 
-  driveLink?: string; 
-  imageUrl?: string; 
-  imageUrls?: string[]; 
-  approvalDocUrls?: string[]; 
-  monthsApplied?: number; 
-  embedding_field?: number[]; // MỚI: Vector dữ liệu cho RAG
+  driveLink?: string;
+  monthsApplied?: number;
+  embedding_field?: number[];
+  attachmentUrls?: string[];
+  imageUrls?: string[];
+  imageUrl?: string;
+  approvalDocUrls?: string[];
 }
 
 export interface ComplianceCheck {
   overallStatus: 'pass' | 'fail' | 'warning';
-  score: number; 
+  score: number;
   items: {
-    criteria: string; 
-    isMet: boolean; 
-    comment: string; 
+    criteria: string;
+    isMet: boolean;
+    comment: string;
   }[];
-  missingSections: string[]; 
-  suggestion: string; 
+  missingSections: string[];
+  suggestion: string;
 }
 
 export interface PendingInitiative {
   id: string;
-  companyId: string; // MỚI: Định danh công ty
   title: string;
   authors: string[];
   unit: string[];
@@ -59,24 +55,23 @@ export interface PendingInitiative {
   field: string[];
   status: 'pending';
   submittedAt: number;
-  driveLink?: string; 
-  attachmentUrls?: string[]; 
-  imageUrl?: string; 
-  imageUrls?: string[]; 
-  registrationFormUrl?: string;
-  contactZalo?: string; 
-  monthsApplied?: number; 
-  
+  driveLink?: string;
+  contactZalo?: string;
+  monthsApplied?: number;
+
   publicAnalysis?: {
     score: number;
     verdict: string;
     advice: string;
     similarTitle?: string;
-    similarId?: string; 
-    similarScope?: InitiativeScope; 
+    similarId?: string;
+    similarScope?: InitiativeScope;
   };
 
   complianceCheck?: ComplianceCheck;
+  attachmentUrls?: string[];
+  imageUrls?: string[];
+  imageUrl?: string;
 }
 
 export type SettlementStatus = 'chua_thanh_toan' | 'dang_thanh_toan' | 'da_quyet_toan';
@@ -84,23 +79,23 @@ export type ProjectStatus = 'dang_thuc_hien' | 'da_nghiem_thu' | 'da_huy';
 
 export interface ResearchProject {
   id: string;
-  companyId: string; // MỚI: Định danh công ty
   title: string;
   authors: string[];
   mainMembers: string[];
   experts: string[];
   budget: number;
-  progress: number; 
+  progress: number;
   settlementStatus: SettlementStatus;
+  status?: ProjectStatus;
   content: string;
   level: 'NPSC' | 'NPC' | 'EVN';
   year: number;
-  status: ProjectStatus;
+  driveLink?: string;
   attachmentUrl?: string;
 }
 
 export interface SimilarityInfo {
-  score: number; 
+  score: number;
   status: 'new' | 'similar' | 'duplicate';
   reason: string;
   referenceTitle?: string;
@@ -108,24 +103,23 @@ export interface SimilarityInfo {
 
 export interface BatchItem {
   tempId: string;
-  companyId: string; // MỚI: Định danh công ty
   selected: boolean;
   title: string;
   authors: string[];
   unit: string[];
   year: number;
   content: string;
-  field: string[]; 
+  field: string[];
   level: InitiativeLevel[];
   similarity?: SimilarityInfo;
-  scope?: InitiativeScope; 
+  scope?: InitiativeScope;
 }
 
 export interface ChatMessage {
   role: 'user' | 'model';
   text: string;
   thinking?: string;
-  isRag?: boolean; // Đánh dấu tin nhắn dùng RAG
+  isRag?: boolean;
 }
 
 export interface AnalysisResult {
@@ -139,38 +133,18 @@ export interface AnalysisResult {
 
 export interface ReferenceDocument {
   id: string;
-  companyId: string; // MỚI: Định danh công ty
   title: string;
   description: string;
-  fileName: string;
-  fileUrl: string;
-  fileType: string;
-  size: number;
+  driveLink?: string;
   uploadDate: number;
   uploadedBy: string;
 }
 
-export type UserRole = 'master_admin' | 'company_admin' | 'user';
+export type UserRole = 'admin' | 'user';
 
 export interface UserProfile {
   uid: string;
   email: string;
   role: UserRole;
-  companyId?: string;
   displayName?: string;
-}
-
-export interface CompanyConfig {
-  id: string;
-  name: string;
-  adminEmail: string; // Email của admin công ty
-  firebaseConfig: {
-    apiKey: string;
-    authDomain: string;
-    projectId: string;
-    storageBucket: string;
-    messagingSenderId: string;
-    appId: string;
-  };
-  geminiApiKey?: string;
 }

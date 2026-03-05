@@ -6,7 +6,7 @@ import ErrorBoundary from './ErrorBoundary';
 import { AppProvider } from './contexts/AppContext';
 import { ModalProvider } from './contexts/ModalContext';
 
-// Global handler for unhandled promise rejections (often API calls)
+// Global handler for unhandled promise rejections
 window.addEventListener('unhandledrejection', (event) => {
   console.error('Unhandled Rejection:', event.reason);
 });
@@ -16,20 +16,15 @@ if (!rootElement) {
   throw new Error("Could not find root element to mount to");
 }
 
-import { initFirebase } from './services/firebase';
-
-// Initialize with Master Project (default)
-initFirebase('master').then(() => {
-  const root = ReactDOM.createRoot(rootElement);
-  root.render(
-    <React.StrictMode>
-      <ErrorBoundary>
-        <AppProvider>
-          <ModalProvider>
-            <App />
-          </ModalProvider>
-        </AppProvider>
-      </ErrorBoundary>
-    </React.StrictMode>
-  );
-});
+const root = ReactDOM.createRoot(rootElement);
+root.render(
+  <React.StrictMode>
+    <ErrorBoundary>
+      <AppProvider>
+        <ModalProvider>
+          <App />
+        </ModalProvider>
+      </AppProvider>
+    </ErrorBoundary>
+  </React.StrictMode>
+);

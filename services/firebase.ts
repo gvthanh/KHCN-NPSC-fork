@@ -1,40 +1,21 @@
 import firebase from "firebase/compat/app";
 import "firebase/compat/auth";
 import "firebase/compat/firestore";
-import "firebase/compat/storage";
-import { initClientApp, getClientConfig } from "./firebaseClient";
 
-export { getClientConfig };
-export let db: firebase.firestore.Firestore;
-export let auth: firebase.auth.Auth;
-export let storage: firebase.storage.Storage;
-
-// Callback để thông báo khi Firebase được khởi tạo lại
-let onInitCallbacks: (() => void)[] = [];
-export const onFirebaseInit = (cb: () => void) => {
-  onInitCallbacks.push(cb);
-  return () => {
-    onInitCallbacks = onInitCallbacks.filter(c => c !== cb);
-  };
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-export const initFirebase = async (companyId: string) => {
-  const clientApp = await initClientApp(companyId);
-  const newDb = clientApp.firestore();
-  const newAuth = clientApp.auth();
-  const newStorage = clientApp.storage();
+// Khởi tạo Firebase App (chỉ 1 lần)
+const app = !firebase.apps.length
+  ? firebase.initializeApp(firebaseConfig)
+  : firebase.app();
 
-  // Only update and notify if the app instance actually changed
-  if (db === newDb && auth === newAuth) {
-    return;
-  }
-
-  db = newDb;
-  auth = newAuth;
-  storage = newStorage;
-  
-  // Thông báo cho các listener
-  onInitCallbacks.forEach(cb => cb());
-};
-
+export const db = app.firestore();
+export const auth = app.auth();
 export default firebase;

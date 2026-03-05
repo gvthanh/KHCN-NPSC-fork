@@ -16,21 +16,21 @@ interface SidebarProps {
   onLogin: () => void;
   onAdd: () => void;
   onBatch: () => void;
-  onSecurity: () => void; 
+  onSecurity: () => void;
   currentScope: InitiativeScope; // MỚI
   setCurrentScope: (scope: InitiativeScope) => void; // MỚI
 }
 
 const THEME_OPTIONS = ['red', 'blue', 'emerald', 'indigo'];
 
-const Sidebar: React.FC<SidebarProps> = ({ 
-  activeTab, setActiveTab, isDarkMode, setIsDarkMode, 
+const Sidebar: React.FC<SidebarProps> = ({
+  activeTab, setActiveTab, isDarkMode, setIsDarkMode,
   activeTheme, setTheme, user, onLogout, onLogin, onAdd, onBatch, onSecurity,
   currentScope, setCurrentScope
 }) => {
   const { userProfile } = useApp();
   const renderNavButton = (nav: { id: string, label: string, icon: any }) => (
-    <button 
+    <button
       key={nav.id}
       onClick={() => setActiveTab(nav.id)}
       className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm ${activeTab === nav.id ? `${activeTheme.primary} text-white shadow-lg` : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
@@ -51,18 +51,18 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       {/* SCOPE SWITCHER - MỚI */}
       <div className="mb-6 bg-slate-900 p-1.5 rounded-2xl flex border border-slate-800 relative">
-         <button 
-            onClick={() => setCurrentScope('Company')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all z-10 ${currentScope === 'Company' ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-300'}`}
-         >
-            <Building2 size={12}/> Nội bộ
-         </button>
-         <button 
-            onClick={() => setCurrentScope('NPC')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all z-10 ${currentScope === 'NPC' ? 'bg-indigo-500 text-white shadow-md' : 'text-slate-500 hover:text-slate-300'}`}
-         >
-            <Globe size={12}/> Toàn NPC
-         </button>
+        <button
+          onClick={() => setCurrentScope('Company')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all z-10 ${currentScope === 'Company' ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-300'}`}
+        >
+          <Building2 size={12} /> Nội bộ
+        </button>
+        <button
+          onClick={() => setCurrentScope('NPC')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all z-10 ${currentScope === 'NPC' ? 'bg-indigo-500 text-white shadow-md' : 'text-slate-500 hover:text-slate-300'}`}
+        >
+          <Globe size={12} /> Toàn NPC
+        </button>
       </div>
 
       {/* User & Settings Section */}
@@ -73,11 +73,10 @@ const Sidebar: React.FC<SidebarProps> = ({
             <div className="flex-1 overflow-hidden">
               <p className="text-[10px] font-black truncate text-slate-200">{user.email}</p>
               <p className="text-[8px] font-bold text-slate-500 uppercase">
-                {userProfile?.role === 'master_admin' ? 'Master Administrator' : 
-                 userProfile?.role === 'company_admin' ? 'Company Admin' : 'Member'}
+                {userProfile?.role === 'admin' ? 'Administrator' : 'Member'}
               </p>
             </div>
-            <button onClick={onLogout} className="p-2 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"><LogOut size={14}/></button>
+            <button onClick={onLogout} className="p-2 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"><LogOut size={14} /></button>
           </div>
           <div className="mt-4 pt-4 border-t border-slate-800/50 flex items-center justify-between">
             <div className="flex gap-2">
@@ -92,7 +91,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Navigation Groups */}
       <nav className="flex-1 space-y-6 overflow-y-auto custom-scrollbar pr-1">
-        
+
         {/* KHỐI 0: CỔNG ĐĂNG KÝ (PUBLIC) */}
         <div className="space-y-3">
           <div className="p-2 rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 border border-slate-700 shadow-inner">
@@ -102,18 +101,18 @@ const Sidebar: React.FC<SidebarProps> = ({
 
         {/* KHỐI 0.5: QUẢN TRỊ (ADMIN ONLY) */}
         {user && (
-           <div className="space-y-3">
-             <div className="flex items-center gap-2 px-2">
-               <ClipboardCheck size={12} className="text-emerald-500" />
-               <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Kiểm duyệt</span>
-             </div>
-             <div className="p-2 rounded-2xl bg-emerald-900/10 border border-emerald-900/30 space-y-1">
-               {renderNavButton({ id: 'approvals', label: 'Duyệt bài', icon: ClipboardCheck })}
-               {renderNavButton({ id: 'admin', label: 'Cấu hình Firebase', icon: Building2 })}
-             </div>
-           </div>
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 px-2">
+              <ClipboardCheck size={12} className="text-emerald-500" />
+              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Kiểm duyệt</span>
+            </div>
+            <div className="p-2 rounded-2xl bg-emerald-900/10 border border-emerald-900/30 space-y-1">
+              {renderNavButton({ id: 'approvals', label: 'Duyệt bài', icon: ClipboardCheck })}
+              {renderNavButton({ id: 'admin', label: 'Cấu hình Firebase', icon: Building2 })}
+            </div>
+          </div>
         )}
-        
+
         {/* KHỐI 1: NGHIÊN CỨU KHCN */}
         <div className="space-y-3">
           <div className="flex items-center gap-2 px-2">
@@ -130,7 +129,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           <div className="flex items-center gap-2 px-2">
             <Zap size={12} className={currentScope === 'NPC' ? 'text-indigo-500' : 'text-amber-500'} />
             <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-               {currentScope === 'NPC' ? 'Hệ thống Toàn NPC' : 'Hệ thống Nội bộ'}
+              {currentScope === 'NPC' ? 'Hệ thống Toàn NPC' : 'Hệ thống Nội bộ'}
             </span>
           </div>
           <div className="p-2 rounded-2xl bg-slate-900/40 border border-slate-800/60 shadow-inner space-y-1">
@@ -142,9 +141,9 @@ const Sidebar: React.FC<SidebarProps> = ({
               { id: 'references', label: 'Tài liệu hồ sơ', icon: BookOpen },
               { id: 'chat', label: 'Trợ lý AI', icon: Bot },
             ]
-            // Lọc bỏ 'bubble' nếu đang ở chế độ NPC
-            .filter(nav => currentScope === 'NPC' ? nav.id !== 'bubble' : true)
-            .map(renderNavButton)}
+              // Lọc bỏ 'bubble' nếu đang ở chế độ NPC
+              .filter(nav => currentScope === 'NPC' ? nav.id !== 'bubble' : true)
+              .map(renderNavButton)}
           </div>
         </div>
       </nav>
@@ -152,16 +151,16 @@ const Sidebar: React.FC<SidebarProps> = ({
       {/* Security Button Footer */}
       <div className="mt-auto pt-6 border-t border-slate-900 space-y-3">
         {user && (
-           <>
-             <button onClick={onAdd} className="w-full flex items-center justify-center gap-2 bg-white text-slate-900 py-3.5 rounded-xl font-black text-xs hover:bg-slate-100 shadow-xl transition-all active:scale-95 uppercase tracking-widest"><Plus size={16} /> Thêm hồ sơ mới</button>
-             <button onClick={onBatch} className={`w-full flex items-center justify-center gap-2 ${activeTheme.primary} text-white py-3.5 rounded-xl font-black text-xs shadow-xl transition-all active:scale-95 uppercase tracking-widest`}><FileUp size={16} /> Nhập PDF (AI)</button>
-           </>
+          <>
+            <button onClick={onAdd} className="w-full flex items-center justify-center gap-2 bg-white text-slate-900 py-3.5 rounded-xl font-black text-xs hover:bg-slate-100 shadow-xl transition-all active:scale-95 uppercase tracking-widest"><Plus size={16} /> Thêm hồ sơ mới</button>
+            <button onClick={onBatch} className={`w-full flex items-center justify-center gap-2 ${activeTheme.primary} text-white py-3.5 rounded-xl font-black text-xs shadow-xl transition-all active:scale-95 uppercase tracking-widest`}><FileUp size={16} /> Nhập PDF (AI)</button>
+          </>
         )}
-        <button 
-           onClick={onSecurity}
-           className="w-full flex items-center justify-center gap-2 bg-slate-900 text-slate-500 py-3 rounded-xl font-bold text-[10px] hover:text-emerald-500 hover:bg-slate-800 transition-all uppercase tracking-widest border border-slate-800"
+        <button
+          onClick={onSecurity}
+          className="w-full flex items-center justify-center gap-2 bg-slate-900 text-slate-500 py-3 rounded-xl font-bold text-[10px] hover:text-emerald-500 hover:bg-slate-800 transition-all uppercase tracking-widest border border-slate-800"
         >
-           <ShieldCheck size={14} /> Bảo mật & Quyền riêng tư
+          <ShieldCheck size={14} /> Bảo mật & Quyền riêng tư
         </button>
       </div>
     </aside>

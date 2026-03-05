@@ -1,7 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { auth, db, initFirebase, onFirebaseInit, getClientConfig } from '../services/firebase';
-import { masterDb } from '../services/firebaseMaster';
+import { auth, db } from '../services/firebase';
 import { InitiativeScope, PointConfig, UserRole, UserProfile } from '../types';
 
 // Định nghĩa Theme
@@ -9,18 +8,17 @@ export const THEMES = {
   red: { primary: 'bg-orange-600', hover: 'hover:bg-orange-700', text: 'text-orange-600', border: 'border-orange-200', gradient: 'from-orange-500 to-red-600', accent: 'bg-orange-50', shadow: 'shadow-orange-600/20' },
   blue: { primary: 'bg-blue-600', hover: 'hover:bg-blue-700', text: 'text-blue-600', border: 'border-blue-200', gradient: 'from-blue-500 to-indigo-600', accent: 'bg-blue-50', shadow: 'shadow-blue-600/20' },
   emerald: { primary: 'bg-emerald-600', hover: 'hover:bg-emerald-700', text: 'text-emerald-600', border: 'border-emerald-200', gradient: 'from-emerald-500 to-teal-600', accent: 'bg-emerald-50', shadow: 'shadow-emerald-600/20' },
-  indigo: { primary: 'bg-indigo-600', hover: 'hover:bg-indigo-700', text: 'text-indigo-600', border: 'border-indigo-200', gradient: 'from-indigo-500 to-purple-600', accent: 'bg-emerald-50', shadow: 'shadow-emerald-600/20' }
+  indigo: { primary: 'bg-indigo-600', hover: 'hover:bg-indigo-700', text: 'text-indigo-600', border: 'border-indigo-200', gradient: 'from-indigo-500 to-purple-600', accent: 'bg-indigo-50', shadow: 'shadow-indigo-600/20' }
 };
 
 export const DEFAULT_POINT_CONFIG: PointConfig = { HLH: 1, NPSC: 2, NPC: 3, EVN: 4 };
 
 type ThemeKey = keyof typeof THEMES;
-type TabType = 'list' | 'stats' | 'chat' | 'bubble' | 'treemap' | 'references' | 'research' | 'register' | 'approvals' | 'admin';
+type TabType = 'list' | 'stats' | 'chat' | 'bubble' | 'treemap' | 'references' | 'research' | 'register' | 'approvals';
 
 interface AppContextType {
   user: any;
   userProfile: UserProfile | null;
-  companyId: string | null; // MỚI: Định danh công ty
   activeTab: TabType;
   setActiveTab: (tab: TabType) => void;
   theme: ThemeKey;
@@ -41,88 +39,52 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [companyId, setCompanyId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('list');
   const [theme, setTheme] = useState<ThemeKey>('red');
   const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('theme') === 'dark');
   const [currentScope, setCurrentScope] = useState<InitiativeScope>('Company');
   const [pointConfig, setPointConfig] = useState<PointConfig>(DEFAULT_POINT_CONFIG);
-  const [geminiApiKey, setGeminiApiKey] = useState<string | null>(null);
-  const [fbVersion, setFbVersion] = useState(0);
 
-  useEffect(() => {
-    const unsubscribeInit = onFirebaseInit(() => {
-      setFbVersion(v => v + 1);
-      const config = getClientConfig();
-      if (config?.geminiApiKey) {
-        setGeminiApiKey(config.geminiApiKey);
-      } else {
-        setGeminiApiKey(null);
-      }
-    });
-    return unsubscribeInit;
-  }, []);
+  // Gemini API Key từ env var
+  const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY || null;
 
+  // Auth listener
   useEffect(() => {
-    if (!auth) return;
     const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
       console.log("Auth State Changed:", firebaseUser?.email);
       setUser(firebaseUser);
-      
-      if (firebaseUser) {
-        const email = firebaseUser.email;
-        if (email) {
-          try {
-            // 1. Luôn lấy profile từ Master Project trước để kiểm tra Role
-            const profileDoc = await masterDb.collection('users').doc(firebaseUser.uid).get();
-            let role: UserRole = 'user';
-            
-            if (profileDoc.exists) {
-              const data = profileDoc.data() as UserProfile;
-              role = data.role || 'user';
-              setUserProfile(data);
-            } else {
-              // Nếu chưa có profile, mặc định là user hoặc check email cứng
-              const masterEmails = ['vietthanh228@gmail.com', 'admin@master.com'];
-              role = masterEmails.includes(email) ? 'master_admin' : 'user';
-              setUserProfile({ uid: firebaseUser.uid, email, role });
-            }
 
-            // 2. Nếu là Master Admin, ở lại Master Project
-            if (role === 'master_admin') {
-              if (companyId !== 'master') {
-                await initFirebase('master');
-                setCompanyId('master');
-              }
-            } else {
-              // 3. Nếu không phải Master Admin, thử kết nối tới Firebase riêng của họ
-              if (companyId !== email) {
-                try {
-                  await initFirebase(email);
-                  setCompanyId(email);
-                } catch (e) {
-                  console.warn("Could not auto-init firebase for email:", email, e);
-                  await initFirebase('master');
-                  setCompanyId('master');
-                }
-              }
-            }
-          } catch (e: any) {
-            console.error("Auth state change error:", e);
-            if (companyId !== 'master') {
-              await initFirebase('master');
-              setCompanyId('master');
-            }
+      if (firebaseUser) {
+        try {
+          // Load profile từ Firestore
+          const profileDoc = await db.collection('users').doc(firebaseUser.uid).get();
+          if (profileDoc.exists) {
+            setUserProfile(profileDoc.data() as UserProfile);
+          } else {
+            // Tạo profile mặc định
+            const defaultProfile: UserProfile = {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email || '',
+              role: 'user'
+            };
+            setUserProfile(defaultProfile);
           }
+        } catch (e) {
+          console.error("Error loading user profile:", e);
+          setUserProfile({
+            uid: firebaseUser.uid,
+            email: firebaseUser.email || '',
+            role: 'user'
+          });
         }
       } else {
-        setCompanyId(null);
         setUserProfile(null);
       }
     });
     return unsubscribe;
-  }, [fbVersion]);
+  }, []);
 
+  // Dark mode toggle
   useEffect(() => {
     localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
     document.documentElement.classList.toggle('dark', isDarkMode);
@@ -131,14 +93,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Load Point Config
   useEffect(() => {
     const fetchConfig = async () => {
-      // Wait for db to be initialized
-      let retries = 0;
-      while (!db && retries < 10) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        retries++;
-      }
-      if (!db) return;
-
       try {
         const doc = await db.collection('settings').doc('global_config').get();
         if (doc.exists && doc.data()?.pointConfig) {
@@ -166,7 +120,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const value = {
     user,
     userProfile,
-    companyId, // MỚI
     activeTab, setActiveTab,
     theme, setTheme,
     activeTheme: THEMES[theme],

@@ -1,5 +1,5 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { db } from "./services/firebase";
 import { useInitiatives } from "./hooks/useInitiatives";
 import Sidebar from "./components/Sidebar";
@@ -12,7 +12,6 @@ import ReferencePage from "./pages/ReferencePage";
 import ResearchPage from "./pages/ResearchPage";
 import RegisterPage from "./pages/RegisterPage";
 import ApprovalPage from "./pages/ApprovalPage";
-import AdminConfigPage from "./pages/AdminConfigPage";
 import ErrorBoundary from "./ErrorBoundary";
 import BatchImportModal from "./components/BatchImportModal";
 import SecurityAuditModal from "./components/SecurityAuditModal";
@@ -23,21 +22,22 @@ import EditResearchModal from "./components/modals/EditResearchModal";
 
 import { useApp } from "./contexts/AppContext";
 import { useModal } from "./contexts/ModalContext";
+import { auth } from "./services/firebase";
 
 const App: React.FC = () => {
-  const { 
-    activeTab, setActiveTab, 
-    theme, setTheme, activeTheme, 
-    isDarkMode, setIsDarkMode, 
-    user, companyId,
+  const {
+    activeTab, setActiveTab,
+    theme, setTheme, activeTheme,
+    isDarkMode, setIsDarkMode,
+    user,
     currentScope, setCurrentScope,
     pointConfig, savePointConfig
   } = useApp();
 
-  const { 
+  const {
     isBatchOpen, closeBatch, openBatch,
     isSecurityOpen, closeSecurity, openSecurity,
-    openLogin, openEditInitiative, openViewInitiative, openEditProject 
+    openLogin, openEditInitiative, openViewInitiative, openEditProject
   } = useModal();
 
   const { initiatives: allInitiatives } = useInitiatives();
@@ -50,15 +50,26 @@ const App: React.FC = () => {
     });
   }, [allInitiatives, currentScope]);
 
+  // Hàm xóa dùng chung cho tất cả các trang
+  const handleDelete = useCallback(async (id: string) => {
+    if (!confirm('Xác nhận xóa sáng kiến này?')) return;
+    try {
+      await db.collection("initiatives").doc(id).delete();
+    } catch (err) {
+      console.error("Delete error:", err);
+      alert("Lỗi khi xóa. Bạn có thể không có quyền thực hiện thao tác này.");
+    }
+  }, []);
+
   return (
     <ErrorBoundary>
       <div className="min-h-screen flex flex-col lg:flex-row bg-[#f8fafc] dark:bg-slate-950 transition-colors duration-300">
-        <Sidebar 
+        <Sidebar
           activeTab={activeTab} setActiveTab={setActiveTab}
           isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode}
           activeTheme={activeTheme} setTheme={setTheme}
-          user={user} onLogout={() => import('./services/firebase').then(m => m.auth.signOut())} onLogin={openLogin}
-          onAdd={() => activeTab === 'research' ? openEditProject() : openEditInitiative()} 
+          user={user} onLogout={() => auth.signOut()} onLogin={openLogin}
+          onAdd={() => activeTab === 'research' ? openEditProject() : openEditInitiative()}
           onBatch={openBatch}
           onSecurity={openSecurity}
           currentScope={currentScope} setCurrentScope={setCurrentScope}
@@ -68,38 +79,13 @@ const App: React.FC = () => {
           <div className="animate-slide">
             {activeTab === 'register' && <RegisterPage activeTheme={activeTheme} />}
             {activeTab === 'approvals' && <ApprovalPage activeTheme={activeTheme} />}
-            {activeTab === 'admin' && <AdminConfigPage activeTheme={activeTheme} />}
-            {activeTab === 'list' && <ListPage initiatives={displayInitiatives} activeTheme={activeTheme} user={user} onView={openViewInitiative} onEdit={openEditInitiative} onDelete={async (id) => {
-              if (!confirm('Xác nhận xóa?')) return;
-              const doc = await db.collection("initiatives").doc(id).get();
-              if (doc.exists && doc.data()?.companyId === companyId) {
-                await doc.ref.delete();
-              } else {
-                alert("Không có quyền xóa hoặc đề tài không tồn tại.");
-              }
-            }} />}
+            {activeTab === 'list' && <ListPage initiatives={displayInitiatives} activeTheme={activeTheme} user={user} onView={openViewInitiative} onEdit={openEditInitiative} onDelete={handleDelete} />}
             {activeTab === 'stats' && <StatsPage initiatives={displayInitiatives} activeTheme={activeTheme} onViewItem={openViewInitiative} pointConfig={pointConfig} onUpdatePointConfig={savePointConfig} user={user} />}
             {activeTab === 'chat' && <ChatPage initiatives={displayInitiatives} activeTheme={activeTheme} />}
             {activeTab === 'references' && <ReferencePage activeTheme={activeTheme} user={user} />}
             {activeTab === 'research' && <ResearchPage activeTheme={activeTheme} user={user} onEdit={openEditProject} onAdd={openEditProject} />}
-            {activeTab === 'bubble' && <BubblePage initiatives={displayInitiatives} activeTheme={activeTheme} user={user} onView={openViewInitiative} onEdit={openEditInitiative} onDelete={async (id) => {
-              if (!confirm('Xác nhận xóa?')) return;
-              const doc = await db.collection("initiatives").doc(id).get();
-              if (doc.exists && doc.data()?.companyId === companyId) {
-                await doc.ref.delete();
-              } else {
-                alert("Không có quyền xóa hoặc đề tài không tồn tại.");
-              }
-            }} />}
-            {activeTab === 'treemap' && <TreeMapPage initiatives={displayInitiatives} activeTheme={activeTheme} user={user} onView={openViewInitiative} onEdit={openEditInitiative} onDelete={async (id) => {
-              if (!confirm('Xác nhận xóa?')) return;
-              const doc = await db.collection("initiatives").doc(id).get();
-              if (doc.exists && doc.data()?.companyId === companyId) {
-                await doc.ref.delete();
-              } else {
-                alert("Không có quyền xóa hoặc đề tài không tồn tại.");
-              }
-            }} />}
+            {activeTab === 'bubble' && <BubblePage initiatives={displayInitiatives} activeTheme={activeTheme} user={user} onView={openViewInitiative} onEdit={openEditInitiative} onDelete={handleDelete} />}
+            {activeTab === 'treemap' && <TreeMapPage initiatives={displayInitiatives} activeTheme={activeTheme} user={user} onView={openViewInitiative} onEdit={openEditInitiative} onDelete={handleDelete} />}
           </div>
         </main>
 
